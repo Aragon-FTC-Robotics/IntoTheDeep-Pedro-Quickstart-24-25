@@ -21,8 +21,6 @@ public class Auto_0_4 extends OpMode {
 
 
     private Follower follower;
-    private FConstants fConstants;
-    private LConstants lConstants;
     private Timer pathTime, totalTime;
     private int pathState = 0;
 
@@ -175,7 +173,7 @@ public class Auto_0_4 extends OpMode {
         pathTime = new Timer();
         totalTime = new Timer();
         totalTime.resetTimer();
-        follower = new Follower(hardwareMap, lConstants.getClass(), fConstants.getClass());
+        follower = new Follower(hardwareMap, FConstants.class, LConstants.class);
         follower.setStartingPose(STARTPOSE);
         buildPaths();
 
