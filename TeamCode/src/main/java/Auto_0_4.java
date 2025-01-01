@@ -116,7 +116,7 @@ public class Auto_0_4 extends OpMode {
                 }
                 break;
             case 2:
-                if ((Math.abs(BUCKETPOSE.getX() - follower.getPose().getX()) <= 0.3) && (Math.abs(BUCKETPOSE.getY() - follower.getPose().getY()) <= 0.3)) {
+                if ((Math.abs(INTAKE1POSE.getX() - follower.getPose().getX()) <= 0.3) && (Math.abs(INTAKE1POSE.getY() - follower.getPose().getY()) <= 0.3)) {
                     slides.setTargetPos(slides.GROUND);
                     bar.setState(Bar.BarState.NEUTRAL);
                     wrist.setState(Wrist.wristState.NEUTRAL);
@@ -155,12 +155,17 @@ public class Auto_0_4 extends OpMode {
                     slides.setTargetPos(Slides.HIGH);
                     bar.setState(Bar.BarState.BUCKET);
                     wrist.setState(Wrist.wristState.BUCKET);
+                    setPathState(7);
                 }
                 break;
             case 7:
                 if (pathTime.getElapsedTimeSeconds() > 2) {
-                    claw.setState(Claw.ClawState.OPEN);
+                    claw.setState(Claw.ClawState.CLOSE);
+                    follower.followPath(grab2, true);
+                    setPathState(8);
                 }
+                break;
+
 
         }
     }
