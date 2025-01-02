@@ -1,5 +1,8 @@
 import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.util.ElapsedTime;
+
+import java.util.concurrent.TimeUnit;
+
 import mechanisms.*;
 
 public class ActionHandler {
@@ -28,17 +31,11 @@ public class ActionHandler {
         TRANSFER_STAGE_3, //barwrist transfer, flywheel stop
         TRANSFER_STAGE_4, //clawopen
         TRANSFER_STAGE_5,
-        CLIP2_STAGE_1, //delay to wrist move
-        CLIP2_STAGE_2, //delay to claw open
-        HIGHBUCKET_STAGE_1, //slides up BEFORE
-        HIGHBUCKET_STAGE_2, //barwrist bucket
-        //        HIGHBUCKET_STAGE_3 //claw open and extendo medium
-        //slides up -> stage 1 -> barwrist -> stage2 ... etc
-        //each case statement has a delay and then runs an action after....
+        CLIP, //delay to wrist move
+        HIGHBUCKET, //slides up BEFORE
         SLIDESDOWN_STAGE_1, //extendo in
-        INTAKERESET_STAGE_1, //flywehl out
-        INTAKERESET_STAGE_2, //wheel STOP
-        RESETSTATE,
+        RESETEXTENDO,
+        RESETINTAKEWRIST_STAGE_1, RESETINTAKEWRIST_STAGE_2,
         NUDGE1, NUDGE2, NUDGE3
     }
 
@@ -55,15 +52,136 @@ public class ActionHandler {
     }
 
     public void Loop(Gamepad gp1, Gamepad gp2) {
-        wallPickup(gp2);
-        Intake(gp1);
+    //clip
+        wallPickup(gp1, gp2); //gp2.b (go to pos) , gp2.a (close claw), gp1.x intakewrist in
+        clip(gp2); //x (set up), then y (actually clip)
+    //intake
+        intake(gp1); //y
+        transfer(gp1, gp2); //gp1 left_bumper, gp2 L&R stick button for nudge
+    //bucket
+        highBucket(gp2); //dpad_up
+        slidesDown(gp2); //dpad_down
+    //reset
+        resetIntakeWrist(gp1); // left_trigger
+        resetExtendo(gp1); //dpad_down
+
+        TimedActions();
     }
 
-    public void handleTimedActions(){
+    public void TimedActions(){
+        long elapsedMs = timer.time(TimeUnit.MILLISECONDS);
 
+        switch (currentActionState){
+        //transfer
+            case TRANSFER_STAGE_1:
+                if (elapsedMs >= 500) {
+                    extendo.setTargetPos(Extendo.MIN);
+                    currentActionState = ActionState.TRANSFER_STAGE_2;
+                    timer.reset();
+                }
+                break;
+            case TRANSFER_STAGE_2:
+                if (elapsedMs >= 500) {
+                    intake.setState(Intake.intakeState.OUT);
+                    currentActionState = ActionState.TRANSFER_STAGE_3;
+                    timer.reset();
+                }
+                break;
+            case TRANSFER_STAGE_3:
+                if (elapsedMs >= 1000) {
+                    intake.setState(Intake.intakeState.STOP);
+                    bar.setState(Bar.BarState.TRANSFER);
+                    wrist.setState(Wrist.wristState.TRANSFER);
+                    currentActionState = ActionState.TRANSFER_STAGE_4;
+                    timer.reset();
+                }
+                break;
+            case TRANSFER_STAGE_4:
+                if (elapsedMs >= 250) {
+                    claw.setState(Claw.ClawState.OPEN);
+                    currentActionState = ActionState.TRANSFER_STAGE_5;
+                    timer.reset();
+                }
+                break;
+            case TRANSFER_STAGE_5:
+                if (elapsedMs >= 500) {
+                    bar.setState(Bar.BarState.NEUTRAL);
+                    currentActionState = ActionState.IDLE;
+                }
+                break;
+
+        //high bucket
+            case HIGHBUCKET:
+                if (elapsedMs >= 700) {
+                    bar.setState(Bar.BarState.BUCKET);
+                    wrist.setState(Wrist.wristState.BUCKET);
+                    currentActionState = ActionState.IDLE;
+                }
+                break;
+
+        //clipping
+            case CLIP:
+                if (elapsedMs >= 220) {
+                    claw.setState(Claw.ClawState.OPEN);
+                    currentActionState = ActionState.IDLE;
+                    extendo.setTargetPos(Extendo.MIN);
+                }
+                break;
+
+        //reset extendo
+            case RESETEXTENDO:
+                if (elapsedMs >= 1000) {
+                    extendo.DANGEROUS_RESET_ENCODERS();
+                    currentActionState = ActionState.IDLE;
+                }
+                break;
+
+        //reset intake wrist
+            case RESETINTAKEWRIST_STAGE_1:
+                if (elapsedMs >= 500) {
+                    intakeWrist.setState(IntakeWrist.intakeWristState.IN);
+                    currentActionState = ActionState.RESETINTAKEWRIST_STAGE_2;
+                    timer.reset();
+                }
+                break;
+            case RESETINTAKEWRIST_STAGE_2:
+                if (elapsedMs >= 500) {
+                    intakeWrist.setState(IntakeWrist.intakeWristState.OUT);
+                    intake.setState(Intake.intakeState.IN);
+                    currentActionState = ActionState.IDLE;
+                }
+                break;
+
+        //nudge sample in intake
+            case NUDGE1:
+                if (elapsedMs >= 100) {
+                    bar.setState(Bar.BarState.TRANSFER);
+                    currentActionState = ActionState.NUDGE2;
+                    timer.reset();
+                }
+                break;
+            case NUDGE2:
+                if (elapsedMs >= 100) {
+                    bar.setState(Bar.BarState.NEUTRAL);
+                    currentActionState = ActionState.NUDGE3;
+                    timer.reset();
+                }
+                break;
+            case NUDGE3:
+                if (elapsedMs >= 100) {
+                    bar.setState(Bar.BarState.TRANSFER);
+                    currentActionState = ActionState.IDLE;
+                    timer.reset();
+                }
+                break;
+
+            default:
+                currentActionState = ActionState.IDLE;
+                break;
+        }
     }
 
-    private void wallPickup(Gamepad gp2){
+    private void wallPickup(Gamepad gp1, Gamepad gp2) {
         if (gp2.b) {
             claw.setState(Claw.ClawState.OPEN);
             bar.setState(Bar.BarState.WALL);
@@ -71,7 +189,7 @@ public class ActionHandler {
             intakeWrist.setState(IntakeWrist.intakeWristState.OUT);
         }
 
-        if (gp2.x) {
+        if (gp1.x) {
             intakeWrist.setState(IntakeWrist.intakeWristState.IN);
         }
 
@@ -82,7 +200,7 @@ public class ActionHandler {
         }
     }
 
-    private void Intake(Gamepad gp1) {
+    private void intake(Gamepad gp1) {
         if (gp1.y && !intaking) {
             intaking = true;
             intake.setState(Intake.intakeState.IN);
@@ -91,9 +209,34 @@ public class ActionHandler {
         intakeCheck();
     }
 
+    private void resetIntakeWrist(Gamepad gp1) {
+        if (gp1.left_trigger > 0.5) {
+            intake.setState(Intake.intakeState.STOP);
+            intaking = false;
+            currentActionState = ActionState.RESETINTAKEWRIST_STAGE_1;
+            timer.reset();
+        }
+    }
 
-
-
+    private void transfer(Gamepad gp1, Gamepad gp2) {
+        if (gp1.left_bumper) {
+            bar.setState(Bar.BarState.NEUTRAL);
+            wrist.setState(Wrist.wristState.TRANSFER);
+            claw.setState(Claw.ClawState.CLOSE);
+            intakeWrist.setState(IntakeWrist.intakeWristState.IN);
+            currentActionState = ActionState.TRANSFER_STAGE_1;
+            timer.reset();
+            intake.setState(Intake.intakeState.STOP);
+            intaking = false;
+        }
+        //nudge
+        if (gp2.left_stick_button && gp2.right_stick_button) {
+            bar.setState(Bar.BarState.NEUTRAL);
+            wrist.setState(Wrist.wristState.TRANSFER);
+            currentActionState = ActionState.NUDGE1;
+            timer.reset();
+        }
+    }
 
     public void intakeCheck() {
         if (intaking) {
@@ -135,6 +278,48 @@ public class ActionHandler {
                     intakeTimer.reset();
                 }
             }
+        }
+    }
+
+    private void highBucket(Gamepad gp2) {
+        if (gp2.dpad_up) {
+            slides.setTargetPos(Slides.HIGH);
+            currentActionState = ActionState.HIGHBUCKET;
+            timer.reset();
+        }
+    }
+
+    private void slidesDown(Gamepad gp2) {
+        if (gp2.dpad_down) {
+            extendo.setTargetPos(Extendo.MED);
+            bar.setState(Bar.BarState.NEUTRAL);
+            wrist.setState(Wrist.wristState.TRANSFER);
+            slides.setTargetPos(Slides.GROUND);
+            currentActionState = ActionState.SLIDESDOWN_STAGE_1;
+            timer.reset();
+        }
+    }
+
+    private void resetExtendo(Gamepad gp1) {
+        if (gp1.dpad_down) {
+            extendo.setTargetPos(-700);
+            currentActionState = ActionState.RESETEXTENDO;
+            timer.reset();
+        }
+    }
+
+    public void clip(Gamepad gp2) {
+        if (gp2.x) {
+            bar.setState(Bar.BarState.CLIP);
+            wrist.setState(Wrist.wristState.CLIP);
+            slides.setTargetPos(Slides.MED);
+            intakeWrist.setState(IntakeWrist.intakeWristState.IN);
+        }
+        if (gp2.y) {
+            slides.setTargetPos(Slides.GROUND);
+            extendo.setTargetPos(Extendo.MED);
+            currentActionState = ActionState.CLIP;
+            timer.reset();
         }
     }
 }
