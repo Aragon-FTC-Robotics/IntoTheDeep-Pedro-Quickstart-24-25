@@ -10,11 +10,11 @@ public class Bar {
     public enum BarState {TRANSFER, WALL, BUCKET, CLIP, NEUTRAL}
     public BarState currentState = BarState.NEUTRAL;
 
-    public final double TRANSFER = 0.818;
-    public final double WALL = 0.864;
-    public final double BUCKET = 0.262;
-    public final double CLIP = 0.403;
-    public final double NEUTRAL = 0.723;
+    public final double TRANSFER = 0.85; //as of jan 3
+    public final double WALL = 0.86;
+    public final double BUCKET = 0.20;
+    public final double CLIP = 0.40;
+    public final double NEUTRAL = 0.70;
 
     public void init(HardwareMap hm) {
         barServoRight = hm.get(Servo.class, "bar");

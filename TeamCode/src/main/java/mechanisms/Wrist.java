@@ -9,11 +9,11 @@ public class Wrist {
     public enum wristState {TRANSFER, BUCKET, WALL, CLIP, NEUTRAL}
     public wristState currentState = wristState.NEUTRAL;
 
-    public final double TRANSFER = 0.078;
-    public final double WALL = 0.464;
-    public final double BUCKET = 1.000;
-    public final double CLIP = 0.332;
-    public final double NEUTRAL = 0.070;
+    public final double TRANSFER = 0.00; //as of jan 3
+    public final double WALL = 0.40;
+    public final double BUCKET = 1.00;
+    public final double CLIP = 0.33;
+    public final double NEUTRAL = 0.00;
 
     public void init(HardwareMap hm) {
         wrist = hm.get(Servo.class, "wrist");
