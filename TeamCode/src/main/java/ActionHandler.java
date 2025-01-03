@@ -232,9 +232,10 @@ public class ActionHandler {
     }
 
     private void intake() {
-            intaking = true;
-            intake.setState(Intake.intakeState.IN);
-            intakeWrist.setState(IntakeWrist.intakeWristState.OUT);
+        extendo.setTargetPos(Extendo.MAX);
+        intaking = true;
+        intake.setState(Intake.intakeState.IN);
+        intakeWrist.setState(IntakeWrist.intakeWristState.OUT);
     }
 
     private void resetIntakeWrist() {
