@@ -9,7 +9,7 @@ public class Intake {
     public enum intakeState {IN, OUT, STOP};
     public intakeState currentState = intakeState.STOP;
     public void init(HardwareMap hm) {
-        intake = hm.get(DcMotor.class, "flywheel");
+        intake = hm.get(DcMotor.class, "intake");
     }
     public void Loop(Gamepad gp1, Gamepad gp2) {
         switch (currentState) {
