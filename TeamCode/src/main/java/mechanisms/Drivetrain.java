@@ -20,10 +20,10 @@ public class Drivetrain {
         leftFront = hm.get(DcMotor.class, "leftFront");
         rightRear = hm.get(DcMotor.class, "rightBack");
         leftRear = hm.get(DcMotor.class, "leftBack");
-        rightFront.setDirection(DcMotorSimple.Direction.FORWARD);
-        rightRear.setDirection(DcMotorSimple.Direction.FORWARD);
-        leftFront.setDirection(DcMotorSimple.Direction.REVERSE);
-        leftRear.setDirection(DcMotorSimple.Direction.REVERSE);
+        rightFront.setDirection(DcMotorSimple.Direction.REVERSE);
+        rightRear.setDirection(DcMotorSimple.Direction.REVERSE);
+        leftFront.setDirection(DcMotorSimple.Direction.FORWARD);
+        leftRear.setDirection(DcMotorSimple.Direction.FORWARD);
     }
 
     public void slowModeON(){
