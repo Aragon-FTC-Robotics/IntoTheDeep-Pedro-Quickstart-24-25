@@ -27,7 +27,7 @@ public class Colorsensor {
         }
 
     }
-    public void Loop(Gamepad gp1, Gamepad gp2){
+    public void Loop(){
         sensedcolors = colorSensor.getNormalizedColors();
         color = Objects.nonNull(sensedcolors) ? new float[] {255*sensedcolors.red,255*sensedcolors.green,255*sensedcolors.blue} : new float[] {0,0,0};
     }
