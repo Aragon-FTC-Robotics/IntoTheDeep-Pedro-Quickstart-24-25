@@ -264,7 +264,7 @@ public class ActionHandler {
 
     }
 
-    public void intakeCheck() {
+    public void intakeCheck() { //Thanks chatgpt
         if (intaking) {
             // Wait for 300ms before checking again
             if (intakeTimer.milliseconds() >= 300) {
