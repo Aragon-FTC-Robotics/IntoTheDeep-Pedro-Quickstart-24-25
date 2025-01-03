@@ -9,6 +9,7 @@ public class BarTest {
     public static double POS = 0.723;
     public void init(HardwareMap hm) {
         bar = hm.get(Servo.class, "bar");
+        bar.setDirection(Servo.Direction.REVERSE);
     }
     public void Loop() {
         bar.setPosition(POS);

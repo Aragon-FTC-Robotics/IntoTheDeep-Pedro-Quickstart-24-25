@@ -58,6 +58,7 @@ public class FullTeleOpRed extends LinearOpMode {
             intakeWrist.Loop();
             slides.Loop();
             wrist.Loop();
+            actionHandler.Loop(gp1, gp2); // :)
             if (looptime > highestTime) {
                 highestTime = looptime;
             }
